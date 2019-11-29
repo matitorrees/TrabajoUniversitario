@@ -1,0 +1,35 @@
+CODIGO MOVER FORM CON PANEL U OTRO CONTROL
+1.-Importar libreria:
+using System.Runtime.InteropServices;
+
+2.-Metodos 
+[DllImport("user32.DLL", EntryPoint = "ReleaseCapture")]
+        private extern static void ReleaseCapture();
+        [DllImport("user32.DLL", EntryPoint = "SendMessage")]
+
+        private extern static void SendMessage(System.IntPtr hWnd, int wMsg, int wParam, int lParam);
+
+3.- llamar metodo anterior en evento MouseMove de cualquier control (panel, picture box) ó Form Propio 
+
+ ReleaseCapture();
+ SendMessage(this.Handle, 0x112, 0xf012, 0);
+
+
+CODIGO ABRIR FORMULARIO DENTRO DE PANEL 
+ private void AbrirFormInPanel(object formHijo)
+        {
+            if (this.panelContenedor.Controls.Count > 0)
+                this.panelContenedor.Controls.RemoveAt(0);
+            Form fh = formHijo as Form;
+            fh.TopLevel = false;
+            fh.FormBorderStyle = FormBorderStyle.None;
+            fh.Dock = DockStyle.Fill;
+            this.panelContenedor.Controls.Add(fh);
+            this.panelContenedor.Tag = fh;
+            fh.Show();
+        }
+
+LLAMAR METODO EN EVENTO DE BOTON
+
+AbrirFormInPanel(new miFormulario);
+

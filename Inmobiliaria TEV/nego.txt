@@ -1,0 +1,336 @@
+using System;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data;
+using Data;
+
+namespace Negocios
+{
+
+    public delegate List<Propietario> ObtenerPropietarios();
+    public delegate int DameNumeroPropietario();
+    public delegate Boolean GuardarPropietario(Propietario p);
+    public delegate Boolean ModifPropietario(Propietario p, Propietario p1);
+    public delegate void SacateItem(string m);
+    public delegate void EliminarDeAdminYBase(string m);
+
+
+    public class ExceptionCustom : Exception
+    {
+        public ExceptionCustom(String msg) : base(msg)
+        {
+
+        }
+    }
+
+    public class Administradora
+    {
+        int nroPropietario = 0;
+
+        List<Propietario> listaPropietarios;
+
+        public Administradora()
+        {
+            listaPropietarios = new List<Propietario>();
+        }
+
+        public List<Propietario> ObtenerPropieta()
+        {
+            if (listaPropietarios.Count == 0)
+                return null;
+            return listaPropietarios;
+        }
+
+        public int DameNPropietario()
+        {
+            return nroPropietario;
+        }
+
+        public Boolean AgregarPropietario(Propietario p)
+        {
+            int i = 0;
+            Dato d = new Dato();
+
+            while (i < listaPropietarios.Count && listaPropietarios[i].Dni != p.Dni)
+                i++;
+
+            if (i == listaPropietarios.Count)
+            {
+                nroPropietario++;
+                p.NroPropietario = nroPropietario;
+                listaPropietarios.Add(p);
+                List<string> a1 = new List<string>();
+                a1.Add(p.NroPropietario.ToString());
+                a1.Add(p.Nombre);
+                a1.Add(p.Dni.ToString());
+                a1.Add(p.Telefono.ToString());
+                a1.Add(p.Celular.ToString());
+                a1.Add(p.Mail);
+                a1.Add(p.Comentarios);
+                d.GuardarPropietario(a1);
+                d.GuardarAdmin(nroPropietario.ToString());
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public Propietario DamePropietario(String a)
+        {
+            int i = 0;
+
+            while (i < listaPropietarios.Count && listaPropietarios[i].NroPropietario.ToString() != a)
+                i++;
+
+            return listaPropietarios[i];
+        }
+
+        public Boolean ModificarPropietario(Propietario nuevaPropietario, Propietario anteriorPropietario)
+        {
+            
+            Dato d = new Dato();
+            
+            if (nuevaPropietario.ToString2().Equals(anteriorPropietario.ToString2()))
+            {
+                return true;
+            }
+            else
+                if (nuevaPropietario.Dni.Equals(anteriorPropietario.Dni))
+                {
+                    int i = 0;
+
+                    while (i < listaPropietarios.Count && listaPropietarios[i].Dni != nuevaPropietario.Dni)
+                        i++;
+
+                    if (i < listaPropietarios.Count)
+                    {
+                        listaPropietarios[i].Comentarios = nuevaPropietario.Comentarios;    //Aca cambio todo lo que pudo haber cambiado que no sea el dni claramente y luego guardo en base
+                    }
+                    List<string> a1 = new List<string>();
+                    a1.Add(nuevaPropietario.NroPropietario.ToString());
+                    a1.Add(nuevaPropietario.Nombre);
+                    a1.Add(nuevaPropietario.Dni.ToString());
+                    a1.Add(nuevaPropietario.Telefono.ToString());
+                    a1.Add(nuevaPropietario.Celular.ToString());
+                    a1.Add(nuevaPropietario.Mail);
+                    a1.Add(nuevaPropietario.Comentarios);
+                    d.ActualizarPropietario(a1);
+                    return true;
+                }
+                else
+                {
+                    int j = 0;
+
+                    while (j < listaPropietarios.Count && listaPropietarios[j].Dni != nuevaPropietario.Dni)
+                        j++;
+
+                    if (j < listaPropietarios.Count)
+                    {
+                        return false; //Aca el dni ya existe
+                    }
+                    else
+                    {
+                        listaPropietarios.Remove(anteriorPropietario); //y aca elnuevo dni no existe. Elimino la anterior y agrego la nueva
+                        listaPropietarios.Add(nuevaPropietario);
+                        d.RemoverPropietario(anteriorPropietario.Dni.ToString());
+                        List<string> a1 = new List<string>();
+                        a1.Add(nuevaPropietario.NroPropietario.ToString());
+                        a1.Add(nuevaPropietario.Nombre);
+                        a1.Add(nuevaPropietario.Dni.ToString());
+                        a1.Add(nuevaPropietario.Telefono.ToString());
+                        a1.Add(nuevaPropietario.Celular.ToString());
+                        a1.Add(nuevaPropietario.Mail);
+                        a1.Add(nuevaPropietario.Comentarios);
+                        d.GuardarPropietario(a1);
+                        return true;
+                    }
+                }
+        }
+
+        public void EliminarPropietario(string a)
+        {
+            Dato d = new Dato();
+            int nroPropietario = int.Parse(a);
+            int i = 0;
+
+            while (i < listaPropietarios.Count && listaPropietarios[i].NroPropietario != nroPropietario)
+                i++;
+
+            if (i < listaPropietarios.Count)
+            {
+                d.RemoverPropietario(listaPropietarios[i].Dni.ToString());
+                Propietario p = listaPropietarios[i];
+                listaPropietarios.Remove(p);
+                
+            }
+        }
+
+    }
+
+
+    public abstract class Persona
+    {
+        private int nroPropietario;
+        private String nombre;
+        private long telefono;
+        private long dni;
+        private long celular;
+        private String comentarios;
+        private String mail, tipo;
+        public Persona(int n, String nom, long d, long tel, long c, String m, String co)
+        {
+            nroPropietario = n;
+            nombre = nom;
+            telefono = tel;
+            dni = d;
+            celular = c;
+            comentarios = co;
+            mail = m;
+        }
+
+        public int NroPropietario
+        {
+            get
+            {
+                return nroPropietario;
+            }
+            set
+            {
+                nroPropietario = value;
+            }
+        }
+
+
+        public String Nombre
+        {
+            get
+            {
+                return nombre;
+            }
+            set
+            {
+                nombre = value;
+            }
+        }
+
+        public long Telefono
+        {
+            get
+            {
+                return telefono;
+            }
+            set
+            {
+                telefono = value;
+            }
+        }
+
+
+        public long Celular
+        {
+            get
+            {
+                return celular;
+            }
+            set
+            {
+                celular = value;
+            }
+        }
+
+
+        public long Dni
+        {
+            get
+            {
+                return dni;
+            }
+            set
+            {
+                dni = value;
+            }
+        }
+
+        public String Mail
+        {
+            get
+            {
+                return mail;
+            }
+            set
+            {
+                mail = value;
+            }
+        }
+
+        public String Comentarios
+        {
+            get
+            {
+                return comentarios;
+            }
+            set
+            {
+                comentarios = value;
+            }
+        }
+
+    }
+
+
+    public class Propietario : Persona
+    {
+        List<Propiedad> listaPropiedades;
+        public Propietario(int n, String nom, long d, long tel, long c, String m, String co): base (n,nom,d,tel,c,m,co)
+        {
+
+        }
+
+        public List<Propiedad> Propiedades
+        {
+            get
+            {
+                return listaPropiedades;
+            }
+            set
+            {
+                listaPropiedades = value;
+            }
+        }
+
+        public String ToString2()
+        {
+            return Nombre+Dni.ToString()+Telefono.ToString()+Celular.ToString()+Mail+Comentarios;
+        }
+
+    }
+
+    public class Inquilino : Persona
+    {
+        public Inquilino(int n, String nom, long d, long tel, long c, String m, String co) : base(n, nom, d, tel, c, m, co)
+        {
+
+        }
+    }
+
+    public class Comprador : Persona
+    {
+        public Comprador(int n, String nom, long d, long tel, long c, String m, String co) : base(n, nom, d, tel, c, m, co)
+        {
+
+        }
+    }
+
+    public class Propiedad
+    {
+        public Propiedad()
+        {
+
+        }
+    }
+}
